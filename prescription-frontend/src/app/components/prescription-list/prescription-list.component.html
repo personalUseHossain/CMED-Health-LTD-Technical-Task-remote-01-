@@ -1,0 +1,183 @@
+<div class="fade-in">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">Prescription Management</h4>
+      <p class="text-muted mb-0">View and manage patient prescriptions</p>
+    </div>
+    <button class="btn btn-success-modern btn-modern" routerLink="/dashboard/prescriptions/new">
+      <i class="me-2">➕</i> New Prescription
+    </button>
+  </div>
+
+  <!-- Filter Card -->
+  <div class="card-modern mb-4">
+    <div class="card-header-modern">
+      <h5 class="mb-0">Filter Prescriptions</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Start Date</label>
+          <input type="date" class="form-control-modern form-control" [(ngModel)]="startDate">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">End Date</label>
+          <input type="date" class="form-control-modern form-control" [(ngModel)]="endDate">
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <button class="btn btn-primary-modern btn-modern w-100" (click)="onFilter()" [disabled]="loading">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+            <i class="me-2">🔍</i> Apply Filter
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="loading-spinner-modern"></div>
+    <p class="text-muted mt-3">Loading prescriptions...</p>
+  </div>
+
+  <!-- Prescriptions Table -->
+  <div *ngIf="!loading" class="card-modern">
+    <div class="card-header-modern d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Prescription Records</h5>
+      <span class="badge badge-modern bg-light text-dark">
+        {{ prescriptions.length }} of {{ totalElements }} total
+      </span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-modern table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Patient Info</th>
+              <th>Diagnosis</th>
+              <th>Next Visit</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let prescription of prescriptions" class="slide-in-right">
+              <td>
+                <div class="fw-bold">{{ prescription.prescriptionDate | date:'MMM dd, yyyy' }}</div>
+                <small class="text-muted">{{ prescription.prescriptionDate | date:'EEEE' }}</small>
+              </td>
+              <td>
+                <div class="fw-bold">{{ prescription.patientName }}</div>
+                <small class="text-muted">
+                  {{ prescription.patientAge }} yrs • {{ prescription.patientGender }}
+                </small>
+              </td>
+              <td>
+                <span *ngIf="prescription.diagnosis; else noData" class="diagnosis-text">
+                  {{ prescription.diagnosis && prescription.diagnosis.length > 60 ? prescription.diagnosis.substring(0, 60) + '...' : prescription.diagnosis }}
+                </span>
+                <ng-template #noData>
+                  <span class="text-muted fst-italic">No diagnosis recorded</span>
+                </ng-template>
+              </td>
+              <td>
+                <span *ngIf="prescription.nextVisitDate; else noVisit" 
+                      [class.text-success]="isUpcoming(prescription.nextVisitDate)"
+                      [class.text-warning]="isToday(prescription.nextVisitDate)">
+                  {{ prescription.nextVisitDate | date:'MMM dd, yyyy' }}
+                </span>
+                <ng-template #noVisit>
+                  <span class="text-muted fst-italic">Not scheduled</span>
+                </ng-template>
+              </td>
+              <td>
+                <div class="btn-group">
+                  <button class="btn btn-outline-primary btn-sm btn-modern" 
+                          (click)="onEdit(prescription)"
+                          title="Edit prescription">
+                    <i class="me-1">✏️</i> Edit
+                  </button>
+                  <button class="btn btn-outline-danger btn-sm btn-modern" 
+                          (click)="onDelete(prescription)"
+                          title="Delete prescription">
+                    <i class="me-1">🗑️</i> Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="prescriptions.length === 0">
+              <td colspan="5" class="text-center py-5">
+                <div class="text-muted">
+                  <i style="font-size: 3rem; opacity: 0.5;">📋</i>
+                  <h5 class="mt-3">No prescriptions found</h5>
+                  <p>Try adjusting your filters or create a new prescription.</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="totalPages > 1 && !loading" class="mt-4">
+    <nav aria-label="Prescription pagination">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" [class.disabled]="currentPage === 0">
+          <a class="page-link btn-modern" href="#" 
+             (click)="onPageChange(currentPage - 1); $event.preventDefault()">
+            ‹ Previous
+          </a>
+        </li>
+        
+        <li *ngFor="let page of pages" class="page-item" 
+            [class.active]="page === currentPage">
+          <a class="page-link btn-modern" href="#" 
+             (click)="onPageChange(page); $event.preventDefault()">
+            {{ page + 1 }}
+          </a>
+        </li>
+
+        <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+          <a class="page-link btn-modern" href="#" 
+             (click)="onPageChange(currentPage + 1); $event.preventDefault()">
+            Next ›
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div *ngIf="prescriptionToDelete" class="modal-backdrop show"></div>
+<div *ngIf="prescriptionToDelete" class="modal show d-block" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content card-modern">
+      <div class="modal-header card-header-modern">
+        <h5 class="modal-title">Confirm Deletion</h5>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete the prescription for:</p>
+        <div class="alert alert-warning">
+          <strong>{{ prescriptionToDelete.patientName }}</strong><br>
+          <small class="text-muted">
+            Date: {{ prescriptionToDelete.prescriptionDate | date:'fullDate' }}<br>
+            Age: {{ prescriptionToDelete.patientAge }} • Gender: {{ prescriptionToDelete.patientGender }}
+          </small>
+        </div>
+        <p class="text-danger"><small>This action cannot be undone.</small></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-modern" 
+                (click)="cancelDelete()">Cancel</button>
+        <button type="button" class="btn btn-danger-modern btn-modern" 
+                (click)="confirmDelete()" [disabled]="deleteLoading">
+          <span *ngIf="deleteLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ deleteLoading ? 'Deleting...' : 'Delete Prescription' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
