@@ -1,33 +1,58 @@
-<div class="fade-in">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h4 class="mb-1">Prescription Management</h4>
-      <p class="text-muted mb-0">View and manage patient prescriptions</p>
+<div class="prescription-list-container fade-in">
+  <!-- Header Section -->
+  <div class="list-header">
+    <div class="header-content">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="page-title">Prescription Management</h1>
+          <p class="page-subtitle">Manage and view patient prescriptions</p>
+        </div>
+        <button class="btn btn-primary btn-add" routerLink="/dashboard/prescriptions/new">
+          <fa-icon [icon]="faPlus" class="me-2"></fa-icon>
+          New Prescription
+        </button>
+      </div>
     </div>
-    <button class="btn btn-success-modern btn-modern" routerLink="/dashboard/prescriptions/new">
-      <i class="me-2">➕</i> New Prescription
-    </button>
   </div>
 
   <!-- Filter Card -->
-  <div class="card-modern mb-4">
-    <div class="card-header-modern">
-      <h5 class="mb-0">Filter Prescriptions</h5>
+  <div class="filter-card">
+    <div class="filter-header">
+      <h5 class="filter-title">
+        <fa-icon [icon]="faSearch" class="me-2"></fa-icon>
+        Filter Prescriptions
+      </h5>
     </div>
-    <div class="card-body">
-      <div class="row g-3">
-        <div class="col-md-4">
+    <div class="filter-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
           <label class="form-label">Start Date</label>
-          <input type="date" class="form-control-modern form-control" [(ngModel)]="startDate">
+          <div class="input-group">
+            <span class="input-group-text">
+              <fa-icon [icon]="faCalendarAlt"></fa-icon>
+            </span>
+            <input type="date" class="form-control date-input" [(ngModel)]="startDate">
+          </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <label class="form-label">End Date</label>
-          <input type="date" class="form-control-modern form-control" [(ngModel)]="endDate">
+          <div class="input-group">
+            <span class="input-group-text">
+              <fa-icon [icon]="faCalendarAlt"></fa-icon>
+            </span>
+            <input type="date" class="form-control date-input" [(ngModel)]="endDate">
+          </div>
         </div>
-        <div class="col-md-4 d-flex align-items-end">
-          <button class="btn btn-primary-modern btn-modern w-100" (click)="onFilter()" [disabled]="loading">
-            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-            <i class="me-2">🔍</i> Apply Filter
+        <div class="col-md-3">
+          <button class="btn btn-secondary btn-filter w-100" (click)="onFilter()" [disabled]="loading">
+            <fa-icon [icon]="faSearch" class="me-2" *ngIf="!loading"></fa-icon>
+            <fa-icon [icon]="faSpinner" class="me-2 spin" *ngIf="loading"></fa-icon>
+            {{ loading ? 'Filtering...' : 'Apply Filter' }}
+          </button>
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-outline-secondary btn-reset w-100" (click)="setDefaultDateRange()">
+            Reset Filters
           </button>
         </div>
       </div>
@@ -35,82 +60,108 @@
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="loading" class="text-center py-5">
-    <div class="loading-spinner-modern"></div>
-    <p class="text-muted mt-3">Loading prescriptions...</p>
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-content">
+      <fa-icon [icon]="faSpinner" class="spinner-large spin"></fa-icon>
+      <p class="loading-text">Loading prescriptions...</p>
+    </div>
   </div>
 
-  <!-- Prescriptions Table -->
-  <div *ngIf="!loading" class="card-modern">
-    <div class="card-header-modern d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">Prescription Records</h5>
-      <span class="badge badge-modern bg-light text-dark">
-        {{ prescriptions.length }} of {{ totalElements }} total
-      </span>
+  <!-- Content Section -->
+  <div *ngIf="!loading">
+    <!-- Summary Card -->
+    <div class="summary-card" *ngIf="prescriptions.length > 0">
+      <div class="summary-content">
+        <fa-icon [icon]="faFileMedical" class="summary-icon"></fa-icon>
+        <div class="summary-text">
+          <span class="summary-count">{{ totalElements }}</span>
+          <span class="summary-label">prescriptions found</span>
+        </div>
+        <div class="summary-range">{{ getDisplayRange() }}</div>
+      </div>
     </div>
-    <div class="card-body p-0">
+
+    <!-- Prescriptions Table -->
+    <div class="table-container" *ngIf="prescriptions.length > 0">
       <div class="table-responsive">
-        <table class="table table-modern table-hover mb-0">
-          <thead>
+        <table class="table table-hover">
+          <thead class="table-header">
             <tr>
-              <th>Date</th>
-              <th>Patient Info</th>
-              <th>Diagnosis</th>
-              <th>Next Visit</th>
-              <th>Actions</th>
+              <th width="15%">
+                <fa-icon [icon]="faCalendarAlt" class="me-2"></fa-icon>
+                Date
+              </th>
+              <th width="20%">
+                <fa-icon [icon]="faUser" class="me-2"></fa-icon>
+                Patient Info
+              </th>
+              <th width="30%">
+                <fa-icon [icon]="faStethoscope" class="me-2"></fa-icon>
+                Diagnosis
+              </th>
+              <th width="15%">
+                <fa-icon [icon]="faCalendarCheck" class="me-2"></fa-icon>
+                Next Visit
+              </th>
+              <th width="20%" class="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let prescription of prescriptions" class="slide-in-right">
-              <td>
-                <div class="fw-bold">{{ prescription.prescriptionDate | date:'MMM dd, yyyy' }}</div>
-                <small class="text-muted">{{ prescription.prescriptionDate | date:'EEEE' }}</small>
+            <tr *ngFor="let prescription of prescriptions; let i = index" 
+                class="table-row fade-in-delay"
+                [style.animation-delay.ms]="i * 50">
+              <td class="prescription-date">
+                <div class="date-main">{{ prescription.prescriptionDate | date:'MMM dd, yyyy' }}</div>
+                <div class="date-weekday">{{ prescription.prescriptionDate | date:'EEEE' }}</div>
               </td>
-              <td>
-                <div class="fw-bold">{{ prescription.patientName }}</div>
-                <small class="text-muted">
+              <td class="patient-info">
+                <div class="patient-name">{{ prescription.patientName }}</div>
+                <div class="patient-details">
                   {{ prescription.patientAge }} yrs • {{ prescription.patientGender }}
-                </small>
-              </td>
-              <td>
-                <span *ngIf="prescription.diagnosis; else noData" class="diagnosis-text">
-                  {{ prescription.diagnosis && prescription.diagnosis.length > 60 ? prescription.diagnosis.substring(0, 60) + '...' : prescription.diagnosis }}
-                </span>
-                <ng-template #noData>
-                  <span class="text-muted fst-italic">No diagnosis recorded</span>
-                </ng-template>
-              </td>
-              <td>
-                <span *ngIf="prescription.nextVisitDate; else noVisit" 
-                      [class.text-success]="isUpcoming(prescription.nextVisitDate)"
-                      [class.text-warning]="isToday(prescription.nextVisitDate)">
-                  {{ prescription.nextVisitDate | date:'MMM dd, yyyy' }}
-                </span>
-                <ng-template #noVisit>
-                  <span class="text-muted fst-italic">Not scheduled</span>
-                </ng-template>
-              </td>
-              <td>
-                <div class="btn-group">
-                  <button class="btn btn-outline-primary btn-sm btn-modern" 
-                          (click)="onEdit(prescription)"
-                          title="Edit prescription">
-                    <i class="me-1">✏️</i> Edit
-                  </button>
-                  <button class="btn btn-outline-danger btn-sm btn-modern" 
-                          (click)="onDelete(prescription)"
-                          title="Delete prescription">
-                    <i class="me-1">🗑️</i> Delete
-                  </button>
                 </div>
               </td>
-            </tr>
-            <tr *ngIf="prescriptions.length === 0">
-              <td colspan="5" class="text-center py-5">
-                <div class="text-muted">
-                  <i style="font-size: 3rem; opacity: 0.5;">📋</i>
-                  <h5 class="mt-3">No prescriptions found</h5>
-                  <p>Try adjusting your filters or create a new prescription.</p>
+              <td class="diagnosis-info">
+                <div *ngIf="prescription.diagnosis; else noDiagnosis" 
+                     class="diagnosis-text"
+                     [title]="prescription.diagnosis">
+                  {{ prescription.diagnosis.length > 80 ? (prescription.diagnosis | slice:0:80) + '...' : prescription.diagnosis }}
+                </div>
+                <ng-template #noDiagnosis>
+                  <span class="no-data">No diagnosis recorded</span>
+                </ng-template>
+              </td>
+              <td class="next-visit">
+                <div *ngIf="prescription.nextVisitDate; else noVisit">
+                  <div class="visit-date" 
+                       [class.upcoming]="isUpcoming(prescription.nextVisitDate)"
+                       [class.today]="isToday(prescription.nextVisitDate)"
+                       [class.past]="isPast(prescription.nextVisitDate)">
+                    {{ prescription.nextVisitDate | date:'MMM dd, yyyy' }}
+                  </div>
+                  <div class="visit-status" 
+                       [class.text-success]="isUpcoming(prescription.nextVisitDate)"
+                       [class.text-warning]="isToday(prescription.nextVisitDate)"
+                       [class.text-muted]="isPast(prescription.nextVisitDate)">
+                    {{ isToday(prescription.nextVisitDate) ? 'Today' : 
+                       isUpcoming(prescription.nextVisitDate) ? 'Upcoming' : 'Past' }}
+                  </div>
+                </div>
+                <ng-template #noVisit>
+                  <span class="no-data">Not scheduled</span>
+                </ng-template>
+              </td>
+              <td class="action-buttons">
+                <div class="btn-group">
+                  <button class="btn btn-edit" 
+                          (click)="onEdit(prescription)"
+                          title="Edit prescription">
+                    <fa-icon [icon]="faEdit"></fa-icon>
+                  </button>
+                  <button class="btn btn-delete" 
+                          (click)="onDelete(prescription)"
+                          title="Delete prescription">
+                    <fa-icon [icon]="faTrash"></fa-icon>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -118,63 +169,86 @@
         </table>
       </div>
     </div>
-  </div>
 
-  <!-- Pagination -->
-  <div *ngIf="totalPages > 1 && !loading" class="mt-4">
-    <nav aria-label="Prescription pagination">
-      <ul class="pagination justify-content-center">
-        <li class="page-item" [class.disabled]="currentPage === 0">
-          <a class="page-link btn-modern" href="#" 
-             (click)="onPageChange(currentPage - 1); $event.preventDefault()">
-            ‹ Previous
-          </a>
-        </li>
-        
-        <li *ngFor="let page of pages" class="page-item" 
-            [class.active]="page === currentPage">
-          <a class="page-link btn-modern" href="#" 
-             (click)="onPageChange(page); $event.preventDefault()">
-            {{ page + 1 }}
-          </a>
-        </li>
+    <!-- Empty State -->
+    <div *ngIf="prescriptions.length === 0" class="empty-state">
+      <div class="empty-content">
+        <fa-icon [icon]="faFileMedical" class="empty-icon"></fa-icon>
+        <h3>No Prescriptions Found</h3>
+        <p>Try adjusting your date filters or create a new prescription to get started.</p>
+        <button class="btn btn-primary btn-add" routerLink="/dashboard/prescriptions/new">
+          <fa-icon [icon]="faPlus" class="me-2"></fa-icon>
+          Create First Prescription
+        </button>
+      </div>
+    </div>
 
-        <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
-          <a class="page-link btn-modern" href="#" 
-             (click)="onPageChange(currentPage + 1); $event.preventDefault()">
-            Next ›
-          </a>
-        </li>
-      </ul>
-    </nav>
+    <!-- Pagination -->
+    <div *ngIf="totalPages > 1 && prescriptions.length > 0" class="pagination-container">
+      <div class="pagination-content">
+        <nav aria-label="Prescription pagination">
+          <ul class="pagination">
+            <li class="page-item" [class.disabled]="currentPage === 0">
+              <a class="page-link" 
+                 (click)="onPageChange(currentPage - 1); $event.preventDefault()">
+                Previous
+              </a>
+            </li>
+            
+            <li *ngFor="let page of pages" class="page-item" 
+                [class.active]="page === currentPage">
+              <a class="page-link" 
+                 (click)="onPageChange(page); $event.preventDefault()">
+                {{ page + 1 }}
+              </a>
+            </li>
+
+            <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+              <a class="page-link" 
+                 (click)="onPageChange(currentPage + 1); $event.preventDefault()">
+                Next
+              </a>
+            </li>
+          </ul>
+        </nav>
+        <div class="pagination-info">
+          Page {{ currentPage + 1 }} of {{ totalPages }}
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div *ngIf="prescriptionToDelete" class="modal-backdrop show"></div>
-<div *ngIf="prescriptionToDelete" class="modal show d-block" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content card-modern">
-      <div class="modal-header card-header-modern">
-        <h5 class="modal-title">Confirm Deletion</h5>
+<div *ngIf="prescriptionToDelete" class="modal-overlay" (click)="cancelDelete()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <fa-icon [icon]="faExclamationTriangle" class="modal-icon text-warning"></fa-icon>
+        <h3 class="modal-title">Confirm Deletion</h3>
       </div>
       <div class="modal-body">
-        <p>Are you sure you want to delete the prescription for:</p>
-        <div class="alert alert-warning">
-          <strong>{{ prescriptionToDelete.patientName }}</strong><br>
-          <small class="text-muted">
-            Date: {{ prescriptionToDelete.prescriptionDate | date:'fullDate' }}<br>
-            Age: {{ prescriptionToDelete.patientAge }} • Gender: {{ prescriptionToDelete.patientGender }}
-          </small>
+        <p>Are you sure you want to delete this prescription?</p>
+        <div class="prescription-preview">
+          <div class="preview-header">
+            <fa-icon [icon]="faUser" class="me-2"></fa-icon>
+            <strong>{{ prescriptionToDelete.patientName }}</strong>
+          </div>
+          <div class="preview-details">
+            <div>Age: {{ prescriptionToDelete.patientAge }} • Gender: {{ prescriptionToDelete.patientGender }}</div>
+            <div>Date: {{ prescriptionToDelete.prescriptionDate | date:'fullDate' }}</div>
+          </div>
         </div>
-        <p class="text-danger"><small>This action cannot be undone.</small></p>
+        <div class="alert alert-warning mt-3">
+          <small>This action cannot be undone. All prescription data will be permanently deleted.</small>
+        </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary btn-modern" 
-                (click)="cancelDelete()">Cancel</button>
-        <button type="button" class="btn btn-danger-modern btn-modern" 
-                (click)="confirmDelete()" [disabled]="deleteLoading">
-          <span *ngIf="deleteLoading" class="spinner-border spinner-border-sm me-2"></span>
+        <button type="button" class="btn btn-secondary" (click)="cancelDelete()">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="deleteLoading">
+          <fa-icon [icon]="faSpinner" class="me-2 spin" *ngIf="deleteLoading"></fa-icon>
           {{ deleteLoading ? 'Deleting...' : 'Delete Prescription' }}
         </button>
       </div>

@@ -6,8 +6,8 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { 
     path: 'dashboard', 
-    loadChildren: () => import('./components/dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    loadChildren: () => import('./components/dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES)
   },
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: '/dashboard' }

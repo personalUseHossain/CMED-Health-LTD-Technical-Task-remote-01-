@@ -1,16 +1,30 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { PrescriptionService } from '../../services/prescription.service';
 import { Prescription } from '../../models/prescription.model';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { 
+  faPlus, 
+  faSearch, 
+  faEdit, 
+  faTrash, 
+  faCalendarAlt,
+  faUser,
+  faStethoscope,
+  faCalendarCheck,
+  faSpinner,
+  faFileMedical,
+  faExclamationTriangle
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-prescription-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule, FontAwesomeModule],
   templateUrl: './prescription-list.component.html',
-  styleUrls: ['./prescription-list.css']
+  styleUrls: ['./prescription-list.component.css']
 })
 export class PrescriptionListComponent implements OnInit {
   prescriptions: Prescription[] = [];
@@ -25,10 +39,23 @@ export class PrescriptionListComponent implements OnInit {
   
   // Loading states
   loading = false;
-  deleteLoading = false; // Added missing property
+  deleteLoading = false;
   
   // Delete confirmation
   prescriptionToDelete: Prescription | null = null;
+
+  // FontAwesome Icons
+  faPlus = faPlus;
+  faSearch = faSearch;
+  faEdit = faEdit;
+  faTrash = faTrash;
+  faCalendarAlt = faCalendarAlt;
+  faUser = faUser;
+  faStethoscope = faStethoscope;
+  faCalendarCheck = faCalendarCheck;
+  faSpinner = faSpinner;
+  faFileMedical = faFileMedical;
+  faExclamationTriangle = faExclamationTriangle;
 
   constructor(
     private prescriptionService: PrescriptionService,
@@ -69,6 +96,7 @@ export class PrescriptionListComponent implements OnInit {
       error: (error) => {
         console.error('Error loading prescriptions:', error);
         this.loading = false;
+        // You can add a toast notification here
       }
     });
   }
@@ -79,8 +107,12 @@ export class PrescriptionListComponent implements OnInit {
   }
 
   onPageChange(page: number) {
-    this.currentPage = page;
-    this.loadPrescriptions();
+    if (page >= 0 && page < this.totalPages) {
+      this.currentPage = page;
+      this.loadPrescriptions();
+      // Scroll to top of the list
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   onEdit(prescription: Prescription) {
@@ -93,17 +125,19 @@ export class PrescriptionListComponent implements OnInit {
 
   confirmDelete() {
     if (this.prescriptionToDelete && this.prescriptionToDelete.id) {
-      this.deleteLoading = true; // Set delete loading state
+      this.deleteLoading = true;
       this.prescriptionService.deletePrescription(this.prescriptionToDelete.id).subscribe({
         next: () => {
           this.loadPrescriptions();
           this.prescriptionToDelete = null;
           this.deleteLoading = false;
+          // Show success message
         },
         error: (error) => {
           console.error('Error deleting prescription:', error);
           this.prescriptionToDelete = null;
           this.deleteLoading = false;
+          // Show error message
         }
       });
     }
@@ -113,7 +147,6 @@ export class PrescriptionListComponent implements OnInit {
     this.prescriptionToDelete = null;
   }
 
-  // Added missing methods for date comparisons
   isUpcoming(dateString: string): boolean {
     if (!dateString) return false;
     const today = new Date();
@@ -132,15 +165,30 @@ export class PrescriptionListComponent implements OnInit {
     return visitDate.getTime() === today.getTime();
   }
 
+  isPast(dateString: string): boolean {
+    if (!dateString) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const visitDate = new Date(dateString);
+    visitDate.setHours(0, 0, 0, 0);
+    return visitDate < today;
+  }
+
   get pages(): number[] {
-    // Show only relevant pages (current page ± 2)
-    const startPage = Math.max(0, this.currentPage - 2);
-    const endPage = Math.min(this.totalPages - 1, this.currentPage + 2);
+    const pagesToShow = 5;
+    const startPage = Math.max(0, this.currentPage - Math.floor(pagesToShow / 2));
+    const endPage = Math.min(this.totalPages - 1, startPage + pagesToShow - 1);
     
     const pages = [];
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
     return pages;
+  }
+
+  getDisplayRange(): string {
+    const start = this.currentPage * this.pageSize + 1;
+    const end = Math.min((this.currentPage + 1) * this.pageSize, this.totalElements);
+    return `Showing ${start}-${end} of ${this.totalElements} prescriptions`;
   }
 }

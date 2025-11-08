@@ -1,133 +1,323 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4>Prescription Reports</h4>
-</div>
+<div class="reports-container fade-in">
+  <!-- Header Section -->
+  <div class="reports-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <fa-icon [icon]="faChartBar" class="me-3"></fa-icon>
+        Prescription Analytics
+      </h1>
+      <p class="page-subtitle">
+        Analyze prescription patterns and generate insightful reports
+      </p>
+    </div>
+  </div>
 
-<!-- Date Filter -->
-<div class="card mb-4">
-  <div class="card-body">
-    <h5 class="card-title">Select Date Range for Report</h5>
-    <div class="row g-3">
-      <div class="col-md-4">
-        <label class="form-label">Start Date</label>
-        <input type="date" class="form-control" [(ngModel)]="startDate">
+  <!-- Filter Section -->
+  <div class="filter-card">
+    <div class="filter-header">
+      <h5 class="filter-title">
+        <fa-icon [icon]="faSearch" class="me-2"></fa-icon>
+        Report Parameters
+      </h5>
+    </div>
+    <div class="filter-body">
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="alert alert-error">
+        <div class="alert-content">
+          <fa-icon [icon]="faExclamationTriangle" class="alert-icon"></fa-icon>
+          <div class="alert-text">
+            <strong>Error</strong>
+            <p>{{ errorMessage }}</p>
+          </div>
+          <button class="alert-close" (click)="errorMessage = ''">
+            <fa-icon [icon]="faTimes"></fa-icon>
+          </button>
+        </div>
       </div>
-      <div class="col-md-4">
-        <label class="form-label">End Date</label>
-        <input type="date" class="form-control" [(ngModel)]="endDate">
-      </div>
-      <div class="col-md-4 d-flex align-items-end">
-        <button class="btn btn-primary" (click)="loadReport()" [disabled]="loading">
-          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-          Generate Report
-        </button>
+
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label">
+            <fa-icon [icon]="faCalendarAlt" class="me-2"></fa-icon>
+            Start Date
+          </label>
+          <div class="input-wrapper">
+            <input 
+              type="date" 
+              class="form-control date-input" 
+              [(ngModel)]="startDate"
+              (change)="onDateChange()">
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <label class="form-label">
+            <fa-icon [icon]="faCalendarAlt" class="me-2"></fa-icon>
+            End Date
+          </label>
+          <div class="input-wrapper">
+            <input 
+              type="date" 
+              class="form-control date-input" 
+              [(ngModel)]="endDate"
+              (change)="onDateChange()">
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="action-buttons">
+            <button class="btn btn-generate" (click)="loadReport()" [disabled]="loading">
+              <fa-icon [icon]="faSpinner" class="me-2 spin" *ngIf="loading"></fa-icon>
+              <fa-icon [icon]="faChartBar" class="me-2" *ngIf="!loading"></fa-icon>
+              {{ loading ? 'Generating...' : 'Generate Report' }}
+            </button>
+            
+            <button class="btn btn-reset" (click)="resetFilters()" [disabled]="loading">
+              Reset
+            </button>
+          </div>
+        </div>
+        
+        <div class="col-md-2">
+          <div class="date-info">
+            <small class="text-muted">{{ getDaysWithPrescriptions() }} active days</small>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Loading Spinner -->
-<div *ngIf="loading" class="text-center py-4">
-  <div class="spinner-border text-primary" role="status">
-    <span class="visually-hidden">Loading...</span>
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-content">
+      <fa-icon [icon]="faSpinner" class="spinner-large spin"></fa-icon>
+      <p class="loading-text">Generating your report...</p>
+    </div>
   </div>
-</div>
 
-<!-- Report Content -->
-<div *ngIf="!loading" class="row">
-  <div class="col-lg-8">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Day-wise Prescription Count</h5>
-        
-        <div *ngIf="prescriptionCounts.length === 0" class="text-center text-muted py-4">
-          No data available for the selected date range.
+  <!-- Report Content -->
+  <div *ngIf="!loading" class="report-content">
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="summary-card">
+          <div class="summary-icon total">
+            <fa-icon [icon]="faFileAlt"></fa-icon>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value">{{ getTotalPrescriptions() }}</div>
+            <div class="summary-label">Total Prescriptions</div>
+          </div>
         </div>
+      </div>
+      
+      <div class="col-md-3">
+        <div class="summary-card">
+          <div class="summary-icon average">
+            <fa-icon [icon]="faChartLine"></fa-icon>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value">{{ getAveragePerDay() }}</div>
+            <div class="summary-label">Avg per Day</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-3">
+        <div class="summary-card">
+          <div class="summary-icon peak">
+            <fa-icon [icon]="faCalendarDay"></fa-icon>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value" *ngIf="getBusiestDay()">
+              {{ getBusiestDay()!.count }}
+            </div>
+            <div class="summary-value" *ngIf="!getBusiestDay()">0</div>
+            <div class="summary-label">Peak Day</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-3">
+        <div class="summary-card">
+          <div class="summary-icon trend" [ngClass]="getTrendColor()">
+            <span class="trend-icon">{{ getTrendIcon() }}</span>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value" [ngClass]="getTrendColor()">
+              {{ getTrend() }}
+            </div>
+            <div class="summary-label">Trend</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        <div *ngIf="prescriptionCounts.length > 0" class="chart-container">
-          <div class="chart-bars">
-            <div *ngFor="let item of prescriptionCounts" class="chart-bar">
-              <div class="bar-label">{{ item.count }}</div>
-              <div class="bar-container">
-                <div 
-                  class="bar-fill" 
-                  [style.height]="getBarHeight(item.count)"
-                  [title]="item.count + ' prescriptions'">
+    <!-- Main Chart Section -->
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h5 class="chart-title">
+              <fa-icon [icon]="faChartBar" class="me-2"></fa-icon>
+              Day-wise Prescription Count
+            </h5>
+          </div>
+          <div class="chart-body">
+            <!-- Empty State -->
+            <div *ngIf="prescriptionCounts.length === 0" class="empty-state">
+              <fa-icon [icon]="faChartBar" class="empty-icon"></fa-icon>
+              <h4>No Data Available</h4>
+              <p>Select a date range and generate report to view analytics</p>
+            </div>
+
+            <!-- Chart -->
+            <div *ngIf="prescriptionCounts.length > 0" class="chart-container">
+              <div class="chart-bars">
+                <div *ngFor="let item of prescriptionCounts; let i = index" 
+                     class="chart-bar fade-in-delay"
+                     [style.animation-delay.ms]="i * 50">
+                  <div class="bar-label" [class.highlight]="item.count === maxCount">
+                    {{ item.count }}
+                  </div>
+                  <div class="bar-container">
+                    <div 
+                      class="bar-fill" 
+                      [style.height]="getBarHeight(item.count)"
+                      [class.peak]="item.count === maxCount"
+                      [title]="item.count + ' prescriptions on ' + (item.date | date:'fullDate')">
+                    </div>
+                  </div>
+                  <div class="bar-date">
+                    {{ item.date | date:'MMM dd' }}
+                  </div>
+                  <div class="bar-day">
+                    {{ item.date | date:'EEE' }}
+                  </div>
                 </div>
               </div>
-              <div class="bar-date">
-                {{ item.date | date:'MMM dd' }}
+              
+              <!-- Chart Legend -->
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <div class="legend-color normal"></div>
+                  <span>Normal Day</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color peak"></div>
+                  <span>Peak Day</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Sidebar -->
+      <div class="col-lg-4">
+        <div class="summary-sidebar">
+          <div class="summary-card detailed">
+            <div class="summary-header">
+              <h5 class="summary-title">
+                <fa-icon [icon]="faTable" class="me-2"></fa-icon>
+                Report Summary
+              </h5>
+            </div>
+            <div class="summary-body">
+              <div *ngIf="prescriptionCounts.length === 0" class="empty-summary">
+                <p class="text-muted">No data available for analysis</p>
+              </div>
+
+              <div *ngIf="prescriptionCounts.length > 0" class="summary-details">
+                <div class="summary-item">
+                  <div class="summary-label">Report Period</div>
+                  <div class="summary-value">
+                    {{ startDate | date:'mediumDate' }} to {{ endDate | date:'mediumDate' }}
+                  </div>
+                </div>
+                
+                <div class="summary-item">
+                  <div class="summary-label">Total Days Analyzed</div>
+                  <div class="summary-value">{{ prescriptionCounts.length }} days</div>
+                </div>
+                
+                <div class="summary-item">
+                  <div class="summary-label">Days with Prescriptions</div>
+                  <div class="summary-value">{{ getDaysWithPrescriptions() }} days</div>
+                </div>
+                
+                <div class="summary-item">
+                  <div class="summary-label">Days without Data</div>
+                  <div class="summary-value">{{ getDaysWithoutPrescriptions() }} days</div>
+                </div>
+                
+                <div class="summary-item" *ngIf="getBusiestDay()">
+                  <div class="summary-label">Busiest Day</div>
+                  <div class="summary-value">
+                    {{ getBusiestDay()!.date | date:'MMM dd, yyyy' }}
+                    <span class="badge badge-peak">{{ getBusiestDay()!.count }}</span>
+                  </div>
+                </div>
+                
+                <div class="summary-item">
+                  <div class="summary-label">Activity Trend</div>
+                  <div class="summary-value" [ngClass]="getTrendColor()">
+                    {{ getTrend() | titlecase }}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="col-lg-4">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Report Summary</h5>
-        
-        <div *ngIf="prescriptionCounts.length === 0" class="text-muted">
-          No data to display
-        </div>
-
-        <div *ngIf="prescriptionCounts.length > 0">
-          <div class="mb-3">
-            <strong>Total Period:</strong><br>
-            {{ startDate | date:'mediumDate' }} to {{ endDate | date:'mediumDate' }}
-          </div>
-          
-          <div class="mb-3">
-            <strong>Total Prescriptions:</strong><br>
-            {{ getTotalPrescriptions() }}
-          </div>
-          
-          <div class="mb-3">
-            <strong>Days with Data:</strong><br>
-            {{ prescriptionCounts.length }} days
-          </div>
-          
-          <div class="mb-3">
-            <strong>Average per Day:</strong><br>
-            {{ getAveragePerDay() }}
-          </div>
-          
-          <div>
-            <strong>Busiest Day:</strong><br>
-            <span *ngIf="maxCount > 0">
-              {{ getBusiestDayDate() }} 
-              ({{ maxCount }} prescriptions)
-            </span>
-          </div>
+    <!-- Data Table -->
+    <div *ngIf="!loading && prescriptionCounts.length > 0" class="data-table-card mt-4">
+      <div class="data-table-header">
+        <h5 class="data-table-title">
+          <fa-icon [icon]="faTable" class="me-2"></fa-icon>
+          Detailed Daily Data
+        </h5>
+      </div>
+      <div class="data-table-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th width="60%">Date</th>
+                <th width="20%">Day</th>
+                <th width="20%" class="text-center">Prescription Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of prescriptionCounts" 
+                  [class.table-peak]="item.count === maxCount"
+                  class="fade-in-row">
+                <td class="date-cell">
+                  {{ item.date | date:'fullDate' }}
+                </td>
+                <td class="day-cell">
+                  {{ item.date | date:'EEEE' }}
+                </td>
+                <td class="text-center">
+                  <span class="count-badge" [class.badge-peak]="item.count === maxCount">
+                    {{ item.count }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2" class="text-end"><strong>Total:</strong></td>
+                <td class="text-center">
+                  <strong class="total-count">{{ getTotalPrescriptions() }}</strong>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- Data Table -->
-<div *ngIf="!loading && prescriptionCounts.length > 0" class="card mt-4">
-  <div class="card-body">
-    <h5 class="card-title">Detailed Data</h5>
-    <div class="table-responsive">
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Prescription Count</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of prescriptionCounts">
-            <td>{{ item.date | date:'fullDate' }}</td>
-            <td>
-              <span class="badge bg-primary">{{ item.count }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   </div>
 </div>

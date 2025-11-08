@@ -1,70 +1,111 @@
 <div class="dashboard-container">
-  <div class="row g-0">
+  <!-- Mobile Menu Button -->
+  <button class="mobile-menu-btn" (click)="toggleSidebar()" *ngIf="isMobile">
+    <fa-icon [icon]="faBars" class="menu-icon"></fa-icon>
+  </button>
+
+  <!-- Backdrop for mobile -->
+  <div 
+    class="sidebar-backdrop" 
+    [class.active]="isMobile && !isCollapsed"
+    (click)="closeSidebar()"
+    *ngIf="isMobile">
+  </div>
+
+  <!-- Main Layout -->
+  <div class="dashboard-layout">
     <!-- Sidebar -->
-    <div class="col-lg-2 sidebar-wrapper">
-      <div class="sidebar">
+    <aside 
+      class="sidebar"
+      [class.collapsed]="isCollapsed"
+      [class.mobile-open]="isMobile && !isCollapsed"
+      (click)="onSidebarClick($event)">
+      
+      <div class="sidebar-content">
+        <!-- Logo/Collapse Button Section -->
         <div class="sidebar-header">
-          <h5>CMED Health</h5>
-          <p class="sidebar-subtitle">Prescription System</p>
+          <div class="header-main">
+            <!-- Logo and Brand -->
+            <div class="brand-section" *ngIf="!isCollapsed">
+              <div class="logo">
+                <div class="logo-icon">💊</div>
+              </div>
+              <div class="brand-text">
+                <span class="brand-name">CMED</span>
+                <span class="brand-subtitle">Health</span>
+              </div>
+            </div>
+
+            <!-- Toggle Button -->
+            <button
+              class="sidebar-toggle"
+              (click)="toggleSidebar()"
+              [attr.aria-label]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+              <fa-icon 
+                [icon]="isMobile && !isCollapsed ? faTimes : (isCollapsed ? faChevronRight : faChevronLeft)" 
+                class="toggle-icon">
+              </fa-icon>
+            </button>
+          </div>
         </div>
-        
+
+        <!-- Navigation Links -->
         <nav class="sidebar-nav">
-          <div class="nav-section">
-            <h6 class="section-title">MAIN MENU</h6>
-            <ul class="nav-list">
-              <li class="nav-item">
-                <a class="nav-link" routerLink="/dashboard/prescriptions" routerLinkActive="active">
-                  <i class="nav-icon">📋</i>
-                  <span class="nav-text">Prescriptions</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" routerLink="/dashboard/reports" routerLinkActive="active">
-                  <i class="nav-icon">📊</i>
-                  <span class="nav-text">Reports</span>
-                </a>
-              </li>
-            </ul>
+          <ul class="nav-list">
+            <li class="nav-item" *ngFor="let item of navItems">
+              <a
+                class="nav-link"
+                [routerLink]="item.href"
+                routerLinkActive="active"
+                [class.active]="isActiveRoute(item.href)"
+                [title]="isCollapsed ? item.name : ''"
+                (click)="closeSidebar()">
+                <div class="nav-icon">
+                  <fa-icon [icon]="getIcon(item.icon)"></fa-icon>
+                </div>
+                <span class="nav-text" *ngIf="!isCollapsed">{{ item.name }}</span>
+              </a>
+            </li>
+            
+           
+          </ul>
+        </nav>
+
+        <!-- User Profile Section -->
+        <div class="user-section">
+          <div class="user-profile">
+            <div class="user-avatar">
+              <fa-icon [icon]="faUser" class="user-icon"></fa-icon>
+            </div>
+            <div class="user-info" *ngIf="!isCollapsed">
+              <p class="username">{{ currentUser?.username || 'User' }}</p>
+              <p class="user-role">{{ currentUser?.role || 'Doctor' }}</p>
+            </div>
           </div>
           
-          <div class="nav-section">
-            <h6 class="section-title">ACCOUNT</h6>
-            <ul class="nav-list">
-              <li class="nav-item user-info">
-                <div class="user-details">
-                  <i class="nav-icon">👤</i>
-                  <div class="user-text">
-                    <span class="username">{{ currentUser?.username }}</span>
-                    <span class="user-role">{{ currentUser?.role }}</span>
-                  </div>
-                </div>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link logout-link" href="#" (click)="logout(); $event.preventDefault()">
-                  <i class="nav-icon">🚪</i>
-                  <span class="nav-text">Logout</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-        </nav>
+          <!-- Logout Button -->
+          <button class="logout-btn" (click)="logout()" *ngIf="!isCollapsed">
+            <fa-icon [icon]="faSignOutAlt" class="logout-icon"></fa-icon>
+            Logout
+          </button>
+        </div>
       </div>
-    </div>
+    </aside>
 
-    <!-- Main Content -->
-    <div class="col-lg-10 main-content-wrapper">
-      <main class="main-content">
-        <div class="content-header">
-          <div class="header-content">
-            <h1 class="page-title">Prescription Management</h1>
-            <p class="page-subtitle">Manage patient prescriptions efficiently</p>
-          </div>
+    <!-- Main Content Area -->
+    <main class="main-content" [class.sidebar-collapsed]="isCollapsed && !isMobile">
+      <!-- Content Header -->
+      <div class="content-header">
+        <div class="header-content">
+          <h1 class="page-title">{{ getPageTitle() }}</h1>
+          <p class="page-subtitle">{{ getPageSubtitle() }}</p>
         </div>
-        
-        <div class="content-body">
-          <router-outlet></router-outlet>
-        </div>
-      </main>
-    </div>
+      </div>
+      
+      <!-- Router Outlet for Content -->
+      <div class="content-body">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
   </div>
 </div>
