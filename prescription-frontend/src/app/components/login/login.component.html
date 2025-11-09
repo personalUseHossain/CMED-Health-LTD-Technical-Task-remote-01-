@@ -1,14 +1,21 @@
 <!-- File: src/app/components/login/login.component.html -->
 <div class="login-container">
   <div class="login-card">
-    <div class="text-center mb-4">
-      <h2 class="text-primary">CMED Health LTD</h2>
-      <p class="text-muted">Prescription Management System</p>
+    <div class="login-header">
+      <div class="logo">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 0C8.954 0 0 8.954 0 20C0 31.046 8.954 40 20 40C31.046 40 40 31.046 40 20C40 8.954 31.046 0 20 0Z" fill="#667eea"/>
+          <path d="M26 15C26 17.209 24.209 19 22 19C19.791 19 18 17.209 18 15C18 12.791 19.791 11 22 11C24.209 11 26 12.791 26 15Z" fill="white"/>
+          <path d="M28 25C28 27.209 26.209 29 24 29C21.791 29 20 27.209 20 25C20 22.791 21.791 21 24 21C26.209 21 28 22.791 28 25Z" fill="white"/>
+          <path d="M16 25C16 27.209 14.209 29 12 29C9.791 29 8 27.209 8 25C8 22.791 9.791 21 12 21C14.209 21 16 22.791 16 25Z" fill="white"/>
+        </svg>
+      </div>
+      <h1>CMED Health</h1>
+      <p>Prescription Management System</p>
     </div>
 
-    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
-      <div class="mb-3">
-        <label for="username" class="form-label">Username</label>
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="login-form">
+      <div class="form-group">
         <input 
           type="text" 
           class="form-control" 
@@ -16,11 +23,10 @@
           [(ngModel)]="username" 
           name="username"
           required
-          placeholder="Enter username">
+          placeholder="Username">
       </div>
 
-      <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
+      <div class="form-group">
         <input 
           type="password" 
           class="form-control" 
@@ -28,7 +34,7 @@
           [(ngModel)]="password" 
           name="password"
           required
-          placeholder="Enter password">
+          placeholder="Password">
       </div>
 
       <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
@@ -37,17 +43,15 @@
 
       <button 
         type="submit" 
-        class="btn btn-primary w-100"
+        class="login-btn"
         [disabled]="loading || !loginForm.valid">
-        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+        <span *ngIf="loading" class="spinner"></span>
         {{ loading ? 'Logging in...' : 'Login' }}
       </button>
     </form>
 
-    <div class="mt-3 text-center">
-      <small class="text-muted">
-        Default credentials: admin/password or doctor/password
-      </small>
+    <div class="credentials-hint">
+      <small>Default credentials: admin/password</small>
     </div>
   </div>
 </div>

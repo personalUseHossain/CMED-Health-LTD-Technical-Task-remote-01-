@@ -112,7 +112,7 @@ export class DashboardComponent implements OnInit {
   }
 
   getPageTitle(): string {
-    if (this.currentRoute.includes('prescriptions')) {
+    if (this.currentRoute.includes('prescriptions') || this.currentRoute == '/dashboard') {
       return 'Prescription Management';
     } else if (this.currentRoute.includes('reports')) {
       return 'Reports & Analytics';
@@ -122,7 +122,7 @@ export class DashboardComponent implements OnInit {
   }
 
   getPageSubtitle(): string {
-    if (this.currentRoute.includes('prescriptions')) {
+    if (this.currentRoute.includes('prescriptions') || this.currentRoute == '/dashboard') {
       return 'Manage patient prescriptions efficiently';
     } else if (this.currentRoute.includes('reports')) {
       return 'View prescription reports and analytics';

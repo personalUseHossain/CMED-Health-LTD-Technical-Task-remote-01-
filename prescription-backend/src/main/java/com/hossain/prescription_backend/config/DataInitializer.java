@@ -27,31 +27,49 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         System.out.println("=== DATA INITIALIZER STARTED ===");
         
-        // Create admin user if not exists
-        if (userRepository.findByUsername("admin").isEmpty()) {
-            System.out.println("Creating admin user...");
-            User admin = new User();
-            admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("password"));
-            admin.setRole("ADMIN");
-            userRepository.save(admin);
-            System.out.println("✅ Admin user created - username: admin, password: password");
-        } else {
-            System.out.println("❌ Admin user already exists");
-        }
+        // Clear existing admin user
+        userRepository.findByUsername("admin").ifPresent(user -> {
+            System.out.println("Deleting existing admin user...");
+            userRepository.delete(user);
+            userRepository.flush(); // Force immediate deletion
+        });
+        
+        // Create admin user
+        System.out.println("Creating admin user...");
+        User admin = new User();
+        admin.setUsername("admin");
+        String rawPassword = "password";
+        String encodedPassword = passwordEncoder.encode(rawPassword);
+        admin.setPassword(encodedPassword);
+        admin.setRole("ADMIN");
+        
+        User savedAdmin = userRepository.save(admin);
+        
+        System.out.println("✅ Admin user created successfully!");
+        System.out.println("   Username: " + savedAdmin.getUsername());
+        System.out.println("   Role: " + savedAdmin.getRole());
+        System.out.println("   Password (raw): " + rawPassword);
+        System.out.println("   Password (encoded): " + encodedPassword);
+        System.out.println("   Encoded length: " + encodedPassword.length());
+        
+        // Verify the password encoder works
+        boolean testMatch = passwordEncoder.matches(rawPassword, encodedPassword);
+        System.out.println("   Password verification test: " + (testMatch ? "✅ PASS" : "❌ FAIL"));
 
-        // Create doctor user if not exists
-        if (userRepository.findByUsername("doctor").isEmpty()) {
-            System.out.println("Creating doctor user...");
-            User doctor = new User();
-            doctor.setUsername("doctor");
-            doctor.setPassword(passwordEncoder.encode("password"));
-            doctor.setRole("USER");
-            userRepository.save(doctor);
-            System.out.println("✅ Doctor user created - username: doctor, password: password");
-        } else {
-            System.out.println("❌ Doctor user already exists");
-        }
+        // Create doctor user
+        userRepository.findByUsername("doctor").ifPresent(user -> {
+            System.out.println("Deleting existing doctor user...");
+            userRepository.delete(user);
+            userRepository.flush();
+        });
+        
+        System.out.println("Creating doctor user...");
+        User doctor = new User();
+        doctor.setUsername("doctor");
+        doctor.setPassword(passwordEncoder.encode("password"));
+        doctor.setRole("USER");
+        userRepository.save(doctor);
+        System.out.println("✅ Doctor user created - username: doctor, password: password");
 
         System.out.println("=== DATA INITIALIZER COMPLETED ===");
     }

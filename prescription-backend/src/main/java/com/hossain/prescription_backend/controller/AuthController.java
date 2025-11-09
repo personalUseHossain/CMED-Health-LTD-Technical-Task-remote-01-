@@ -35,7 +35,7 @@ public class AuthController {
                 boolean passwordMatches = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
                 System.out.println("Password matches: " + passwordMatches);
                 
-                if (!passwordMatches) {
+                if (passwordMatches) {
                     session.setAttribute("username", user.getUsername());
                     session.setAttribute("role", user.getRole());
                     

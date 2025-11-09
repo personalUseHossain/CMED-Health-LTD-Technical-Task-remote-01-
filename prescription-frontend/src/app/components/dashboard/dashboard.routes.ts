@@ -9,7 +9,8 @@ export const DASHBOARD_ROUTES: Routes = [
     path: '',
     component: DashboardComponent,
     children: [
-      { path: '', component: PrescriptionListComponent }, // Default to prescriptions list
+      { path: '', redirectTo: 'prescriptions', pathMatch: 'full' },
+
       { path: 'prescriptions', component: PrescriptionListComponent },
       { path: 'prescriptions/new', component: PrescriptionFormComponent },
       { path: 'prescriptions/edit/:id', component: PrescriptionFormComponent },
